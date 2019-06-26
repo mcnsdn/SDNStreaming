@@ -80,9 +80,10 @@ for element in json_data['statistics']:
 print("\n")
 print(str(len(list_ap)) + " AP:", list_ap)
 
+index_client = 0
 for ap in list_ap:
     json_data = getFlow(ap)
-    i = 0
+
     for data in json_data['flows']:
         if data['priority'] != CONST_CLIENT:
             continue
@@ -91,9 +92,9 @@ for ap in list_ap:
         if mac in list_forbidden:
             continue
 
-        list_client[mac] = {'index': i, 'ap': data['deviceId'], 'packet(b)': data['packets']}
-        ax[i].title.set_text("Client " + mac)
-        i += 1
+        list_client[mac] = {'index': index_client, 'ap': data['deviceId'], 'packet(b)': data['packets']}
+        ax[index_client].title.set_text("Client " + mac)
+        index_client += 1
 
 print("\n")
 print(str(len(list_client)) + " client:", list_client)
@@ -143,6 +144,10 @@ def update(time):
             if data['priority'] != CONST_CLIENT:
                 continue
             mac = data['selector']['criteria'][1]['mac']
+
+            if mac in list_forbidden:
+                continue
+
             id = data['deviceId']
             index = list_client[mac]['index']
             if list_ap[id]['packets'] == 0:
