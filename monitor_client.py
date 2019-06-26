@@ -38,6 +38,16 @@ Initialize throughput data
 list_data = [deque([0] * LEN_DATA, maxlen = LEN_DATA) for i in range(NUM_CLIENT)]
 before_data = []
 
+"""
+Fetch information about forbidden client
+"""
+list_forbidden = []
+with open('forbidden.json') as json_file:
+    json_data = json.load(json_file)
+    for client in json_data['client']:
+        list_forbidden.append(client['mac'])
+print("\n")
+print(str(len(list_forbidden)) + " forbidden client:", list_forbidden)
 
 """
 Setting Graph
@@ -54,7 +64,6 @@ for i in range(NUM_CLIENT):
     ax[i] = fig.add_subplot((NUM_CLIENT * 100) + 10 + (i + 1))
     ax[i].set_xlim(0, LEN_DATA)
     ax[i].set_ylim(0, MAX_THROUGHPUT)
-#    ax[i].title.set_text("Client " + str(i + 1))
     line[i], = ax[i].plot([], [], '-')
 
 """
@@ -69,7 +78,7 @@ for element in json_data['statistics']:
     list_ap[id] = {'second(b)': int(port['durationSec']), 'data(b)': int(port['bytesSent'])}
 
 print("\n")
-print(list_ap)
+print(str(len(list_ap)) + " AP:", list_ap)
 
 for ap in list_ap:
     json_data = getFlow(ap)
@@ -78,12 +87,16 @@ for ap in list_ap:
         if data['priority'] != CONST_CLIENT:
             continue
         mac = data['selector']['criteria'][1]['mac']
+        
+        if mac in list_forbidden:
+            continue
+
         list_client[mac] = {'index': i, 'ap': data['deviceId'], 'packet(b)': data['packets']}
         ax[i].title.set_text("Client " + mac)
         i += 1
 
 print("\n")
-print(list_client)
+print(str(len(list_client)) + " client:", list_client)
 time.sleep(5)
 
 """
@@ -110,7 +123,12 @@ def update(time):
         for data in json_data['flows']:
             if data['priority'] != CONST_CLIENT:
                 continue
+
             mac = data['selector']['criteria'][1]['mac']
+
+            if mac in list_forbidden:
+                continue
+
             list_client[mac]['packet(c)'] = data['packets']
             list_client[mac]['diff'] = list_client[mac]['packet(c)'] - list_client[mac]['packet(b)']
 
