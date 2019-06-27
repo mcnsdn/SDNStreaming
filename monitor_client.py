@@ -104,6 +104,7 @@ time.sleep(5)
 Update function for graph
 """
 def update(time):
+    global index_client
     json_data = getTraffic()
    
     throughput = {} 
@@ -130,7 +131,15 @@ def update(time):
             if mac in list_forbidden:
                 continue
 
-            list_client[mac]['packet(c)'] = data['packets']
+            try:
+                list_client[mac]['packet(c)'] = data['packets']
+            except:
+                list_client[mac] = {'index': index_client, 'ap': data['deviceId'], 'packet(b)': data['packets']}
+                ax[index_client].title.set_text("Client " + mac)
+                index_client += 1
+
+                list_client[mac]['packet(c)'] = data['packets']
+
             list_client[mac]['diff'] = list_client[mac]['packet(c)'] - list_client[mac]['packet(b)']
 
             list_ap[ap]['packets'] += list_client[mac]['diff']
